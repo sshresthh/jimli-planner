@@ -44,12 +44,21 @@ function TasksContent() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (searchParams.get("new") === "1") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setModalOpen(true);
       setEditingTask(null);
+    } else {
+      const editId = searchParams.get("edit");
+      if (editId && tasks.length > 0) {
+        const t = tasks.find((task) => task.id === editId);
+        if (t) {
+          setEditingTask(t);
+          setModalOpen(true);
+        }
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, tasks]);
 
   const handleDelete = async (taskId: string) => {
     if (!confirm("Are you sure you want to delete this task?")) return;

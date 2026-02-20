@@ -215,16 +215,18 @@ function TaskRow({
 }) {
   const label = getUrgencyLabel(task, now);
   return (
-    <div className="group flex items-center justify-between rounded-2xl border border-zinc-100 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-zinc-200 hover:shadow-md dark:border-zinc-800/80 dark:bg-zinc-950 dark:hover:border-zinc-700">
-      <div className="flex flex-col gap-2">
-        <span className="font-sans text-base font-bold text-zinc-900 dark:text-zinc-100">
-          {task.title}
-        </span>
-        <span className="font-sans text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-          {subjectMap[task.subjectId] ?? "Unassigned"} <span className="mx-1.5 opacity-50">•</span> {task.type} <span className="mx-1.5 opacity-50">•</span> {format(new Date(task.deadlineDateTime), "MMM d, yyyy")}
-        </span>
+    <Link href={`/tasks?edit=${task.id}`} className="block group rounded-2xl border border-zinc-100 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-zinc-200 hover:shadow-md dark:border-zinc-800/80 dark:bg-zinc-950 dark:hover:border-zinc-700">
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2">
+          <span className="font-sans text-base font-bold text-zinc-900 group-hover:text-amber-600 dark:text-zinc-100 dark:group-hover:text-amber-400 transition-colors">
+            {task.title}
+          </span>
+          <span className="font-sans text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+            {subjectMap[task.subjectId] ?? "Unassigned"} <span className="mx-1.5 opacity-50">•</span> {task.type} <span className="mx-1.5 opacity-50">•</span> {format(new Date(task.deadlineDateTime), "MMM d, yyyy")}
+          </span>
+        </div>
+        <UrgencyBadge label={label}>{label === "today" ? "Today" : label}</UrgencyBadge>
       </div>
-      <UrgencyBadge label={label}>{label === "today" ? "Today" : label}</UrgencyBadge>
-    </div>
+    </Link>
   );
 }

@@ -9,10 +9,16 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function CalendarPage() {
-  const { ready, tasks, subjects } = useDb();
+  const { ready, tasks, subjects, plannerSettings } = useDb();
   const [currentMonth, setCurrentMonth] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const now = new Date();
+
+  const weekStartsOn = plannerSettings?.weekStart === "sunday" ? 0 : 1;
+  const dayLabels = weekStartsOn === 0
+    ? ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
 
   const subjectMap = useMemo(() => {
     return subjects.reduce<Record<string, string>>((acc, subject) => {
@@ -33,8 +39,8 @@ export default function CalendarPage() {
   }, [tasks]);
 
   const calendarDays = useMemo(() => {
-    const start = startOfWeek(startOfMonth(currentMonth), { weekStartsOn: 1 });
-    const end = endOfWeek(endOfMonth(currentMonth), { weekStartsOn: 1 });
+    const start = startOfWeek(startOfMonth(currentMonth), { weekStartsOn });
+    const end = endOfWeek(endOfMonth(currentMonth), { weekStartsOn });
     const days = [] as Date[];
     let cursor = start;
     while (cursor <= end) {
@@ -42,7 +48,7 @@ export default function CalendarPage() {
       cursor = addDays(cursor, 1);
     }
     return days;
-  }, [currentMonth]);
+  }, [currentMonth, weekStartsOn]);
 
   const selectedKey = format(selectedDate, "yyyy-MM-dd");
   const selectedTasks = tasksByDate[selectedKey] ?? [];
@@ -80,7 +86,7 @@ export default function CalendarPage() {
             </h2>
           </div>
           <div className="grid grid-cols-7 gap-1 text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
-            {"Mon Tue Wed Thu Fri Sat Sun".split(" ").map((label) => (
+            {dayLabels.map((label) => (
               <span key={label} className="text-center pb-2">
                 {label}
               </span>
@@ -98,10 +104,10 @@ export default function CalendarPage() {
                   key={key}
                   onClick={() => setSelectedDate(day)}
                   className={`group flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border transition-all hover:scale-105 active:scale-95 ${isSelected
-                      ? "border-zinc-900 bg-zinc-900 text-white shadow-md dark:border-zinc-50 dark:bg-zinc-50 dark:text-zinc-900"
-                      : isToday
-                        ? "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-400"
-                        : "border-transparent bg-zinc-50/50 hover:bg-zinc-100 hover:border-zinc-200 dark:bg-zinc-900/50 dark:hover:bg-zinc-800"
+                    ? "border-zinc-900 bg-zinc-900 text-white shadow-md dark:border-zinc-50 dark:bg-zinc-50 dark:text-zinc-900"
+                    : isToday
+                      ? "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-400"
+                      : "border-transparent bg-zinc-50/50 hover:bg-zinc-100 hover:border-zinc-200 dark:bg-zinc-900/50 dark:hover:bg-zinc-800"
                     } ${!isCurrentMonth ? "opacity-30" : ""}`}
                 >
                   <span className="font-sans text-xs md:text-sm font-bold">{format(day, "d")}</span>
