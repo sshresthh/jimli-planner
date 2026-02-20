@@ -44,16 +44,19 @@ function TasksContent() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (searchParams.get("new") === "1") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setModalOpen(true);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEditingTask(null);
     } else {
       const editId = searchParams.get("edit");
       if (editId && tasks.length > 0) {
         const t = tasks.find((task) => task.id === editId);
         if (t) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setEditingTask(t);
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setModalOpen(true);
         }
       }
