@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useDb } from "../../../components/DbProvider";
-import { exportCasEntriesCsv, exportTasksCsv } from "../../../lib/csv";
+import { exportCasEntriesCsv, exportTasksCsv, exportTokEntriesCsv, exportEeEntriesCsv } from "../../../lib/csv";
 import type { PlannerSettings } from "../../../lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Download, Save } from "lucide-react";
+import { Download, Save, LogOut } from "lucide-react";
 
 const DAY_LABELS: Array<{ label: string; index: number }> = [
   { label: "Monday", index: 1 },
@@ -20,7 +20,7 @@ const DAY_LABELS: Array<{ label: string; index: number }> = [
 ];
 
 export default function SettingsPage() {
-  const { ready, plannerSettings, actions, tasks, casEntries } = useDb();
+  const { ready, plannerSettings, actions, tasks, casEntries, tokEntries, eeEntries, logout } = useDb();
   const [localSettings, setLocalSettings] = useState<PlannerSettings>(plannerSettings);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
@@ -37,18 +37,27 @@ export default function SettingsPage() {
     setTimeout(() => setSaveMessage(null), 3000);
   };
 
-  const handleExport = (type: "tasks" | "cas") => {
+  const handleExport = (type: "tasks" | "cas" | "tok" | "ee") => {
     let csv = "";
+    let filename = "";
     if (type === "tasks") {
       csv = exportTasksCsv(tasks);
-    } else {
+      filename = "tasks.csv";
+    } else if (type === "cas") {
       csv = exportCasEntriesCsv(casEntries);
+      filename = "cas-entries.csv";
+    } else if (type === "tok") {
+      csv = exportTokEntriesCsv(tokEntries);
+      filename = "tok-entries.csv";
+    } else if (type === "ee") {
+      csv = exportEeEntriesCsv(eeEntries);
+      filename = "ee-entries.csv";
     }
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = type === "tasks" ? "tasks.csv" : "cas-entries.csv";
+    link.download = filename;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -155,7 +164,27 @@ export default function SettingsPage() {
             <Download className="mr-2 h-4 w-4" /> Export Tasks
           </Button>
           <Button variant="outline" className="rounded-full bg-white shadow-sm dark:bg-zinc-900" onClick={() => handleExport("cas")}>
-            <Download className="mr-2 h-4 w-4" /> Export CAS Entries
+            <Download className="mr-2 h-4 w-4" /> Export CAS
+          </Button>
+          <Button variant="outline" className="rounded-full bg-white shadow-sm dark:bg-zinc-900" onClick={() => handleExport("tok")}>
+            <Download className="mr-2 h-4 w-4" /> Export TOK
+          </Button>
+          <Button variant="outline" className="rounded-full bg-white shadow-sm dark:bg-zinc-900" onClick={() => handleExport("ee")}>
+            <Download className="mr-2 h-4 w-4" /> Export EE
+          </Button>
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-5 rounded-3xl border border-red-200 bg-red-50 p-6 shadow-sm dark:border-red-900/50 dark:bg-red-950/20 md:p-8">
+        <div>
+          <h2 className="font-display text-2xl font-bold text-red-900 dark:text-red-50">Danger Zone</h2>
+          <p className="mt-1 font-sans text-sm text-red-700 dark:text-red-400">
+            Securely log out of your session. Your encrypted database will remain safe on your device.
+          </p>
+        </div>
+        <div className="flex">
+          <Button variant="destructive" className="rounded-full shadow-md transition-all hover:-translate-y-0.5" onClick={() => logout()}>
+            <LogOut className="mr-2 h-4 w-4" /> Log Out
           </Button>
         </div>
       </section>

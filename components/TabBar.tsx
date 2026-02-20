@@ -9,6 +9,8 @@ const tabs = [
   { href: "/calendar", label: "Calendar" },
   { href: "/subjects", label: "Subjects" },
   { href: "/cas", label: "CAS" },
+  { href: "/tok", label: "TOK" },
+  { href: "/extended", label: "Extended" },
   { href: "/settings", label: "Settings" },
 ];
 
@@ -23,8 +25,8 @@ export function TabBar() {
             key={tab.href}
             href={tab.href}
             className={`group relative flex flex-col items-center justify-center rounded-full px-5 py-2 font-sans text-xs font-semibold tracking-wide transition-all ${isActive
-                ? "bg-zinc-900 text-white shadow-sm dark:bg-white dark:text-zinc-900"
-                : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"
+              ? "bg-zinc-900 text-white shadow-sm dark:bg-white dark:text-zinc-900"
+              : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"
               }`}
           >
             {tab.label}

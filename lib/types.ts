@@ -38,6 +38,26 @@ export type CasEntry = {
   updatedAt: string;
 };
 
+export type TokEntry = {
+  id: string;
+  date: string;
+  title: string;
+  reflectionText: string;
+  evidenceUri?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type EeEntry = {
+  id: string;
+  date: string;
+  title: string;
+  reflectionText: string;
+  evidenceUri?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type PlannerSettings = {
   hoursByDay: Record<number, number>;
   bufferHours: number;

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import type { CasEntry, PlannerSettings, Subject, Task } from "../lib/types";
+import type { CasEntry, PlannerSettings, Subject, Task, TokEntry, EeEntry } from "../lib/types";
 import {
   createCasEntry,
   createSubject,
@@ -10,6 +10,8 @@ import {
   deleteSubject,
   deleteTask,
   fetchCasEntries,
+  fetchTokEntries,
+  fetchEeEntries,
   fetchPlannerSettings,
   fetchSubjects,
   fetchTasks,
@@ -23,6 +25,12 @@ import {
   updateCasEntry,
   updateSubject,
   updateTask,
+  createTokEntry,
+  updateTokEntry,
+  deleteTokEntry,
+  createEeEntry,
+  updateEeEntry,
+  deleteEeEntry,
 } from "../lib/db";
 import { deriveKey, generateSalt } from "../lib/crypto";
 import { getDefaultPlannerSettings } from "../lib/planner";
@@ -34,9 +42,12 @@ type DbContextValue = {
   isNewDatabase: boolean;
   authError: string | null;
   authenticate: (password: string) => Promise<void>;
+  logout: () => void;
   tasks: Task[];
   subjects: Subject[];
   casEntries: CasEntry[];
+  tokEntries: TokEntry[];
+  eeEntries: EeEntry[];
   plannerSettings: PlannerSettings;
   refresh: () => Promise<void>;
   actions: {
@@ -50,6 +61,12 @@ type DbContextValue = {
     createCasEntry: (entry: CasEntry) => Promise<void>;
     updateCasEntry: (entry: CasEntry) => Promise<void>;
     deleteCasEntry: (entryId: string) => Promise<void>;
+    createTokEntry: (entry: TokEntry) => Promise<void>;
+    updateTokEntry: (entry: TokEntry) => Promise<void>;
+    deleteTokEntry: (entryId: string) => Promise<void>;
+    createEeEntry: (entry: EeEntry) => Promise<void>;
+    updateEeEntry: (entry: EeEntry) => Promise<void>;
+    deleteEeEntry: (entryId: string) => Promise<void>;
     savePlannerSettings: (settings: PlannerSettings) => Promise<void>;
   };
 };
@@ -68,6 +85,8 @@ export function DbProvider({ children }: { children: React.ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [casEntries, setCasEntries] = useState<CasEntry[]>([]);
+  const [tokEntries, setTokEntries] = useState<TokEntry[]>([]);
+  const [eeEntries, setEeEntries] = useState<EeEntry[]>([]);
   const [plannerSettings, setPlannerSettingsState] = useState<PlannerSettings>(
     getDefaultPlannerSettings()
   );
@@ -81,6 +100,8 @@ export function DbProvider({ children }: { children: React.ReactNode }) {
     setSubjects(fetchSubjects(db));
     setTasks(fetchTasks(db));
     setCasEntries(fetchCasEntries(db));
+    setTokEntries(fetchTokEntries(db));
+    setEeEntries(fetchEeEntries(db));
     setPlannerSettingsState(fetchPlannerSettings(db) ?? getDefaultPlannerSettings());
   }, []);
 
@@ -169,6 +190,18 @@ export function DbProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isNewDatabase, loadAll, persist]);
 
+  const logout = useCallback(() => {
+    setIsAuthenticated(false);
+    dbRef.current = null;
+    cryptoKeyRef.current = null;
+    setTasks([]);
+    setSubjects([]);
+    setCasEntries([]);
+    setTokEntries([]);
+    setEeEntries([]);
+    setPlannerSettingsState(getDefaultPlannerSettings());
+  }, []);
+
   const refresh = useCallback(async () => {
     loadAll();
   }, [loadAll]);
@@ -235,6 +268,42 @@ export function DbProvider({ children }: { children: React.ReactNode }) {
         await persist();
         loadAll();
       },
+      createTokEntry: async (entry: TokEntry) => {
+        if (!dbRef.current) return;
+        createTokEntry(dbRef.current, entry);
+        await persist();
+        loadAll();
+      },
+      updateTokEntry: async (entry: TokEntry) => {
+        if (!dbRef.current) return;
+        updateTokEntry(dbRef.current, entry);
+        await persist();
+        loadAll();
+      },
+      deleteTokEntry: async (entryId: string) => {
+        if (!dbRef.current) return;
+        deleteTokEntry(dbRef.current, entryId);
+        await persist();
+        loadAll();
+      },
+      createEeEntry: async (entry: EeEntry) => {
+        if (!dbRef.current) return;
+        createEeEntry(dbRef.current, entry);
+        await persist();
+        loadAll();
+      },
+      updateEeEntry: async (entry: EeEntry) => {
+        if (!dbRef.current) return;
+        updateEeEntry(dbRef.current, entry);
+        await persist();
+        loadAll();
+      },
+      deleteEeEntry: async (entryId: string) => {
+        if (!dbRef.current) return;
+        deleteEeEntry(dbRef.current, entryId);
+        await persist();
+        loadAll();
+      },
       savePlannerSettings: async (settings: PlannerSettings) => {
         if (!dbRef.current) return;
         savePlannerSettings(dbRef.current, settings);
@@ -253,14 +322,17 @@ export function DbProvider({ children }: { children: React.ReactNode }) {
       isNewDatabase,
       authError,
       authenticate,
+      logout,
       tasks,
       subjects,
       casEntries,
+      tokEntries,
+      eeEntries,
       plannerSettings,
       refresh,
       actions,
     }),
-    [ready, error, isAuthenticated, isNewDatabase, authError, authenticate, tasks, subjects, casEntries, plannerSettings, refresh, actions]
+    [ready, error, isAuthenticated, isNewDatabase, authError, authenticate, logout, tasks, subjects, casEntries, tokEntries, eeEntries, plannerSettings, refresh, actions]
   );
 
   return <DbContext.Provider value={value}>{children}</DbContext.Provider>;

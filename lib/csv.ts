@@ -1,4 +1,4 @@
-import type { CasEntry, Task } from "./types";
+import type { CasEntry, Task, TokEntry, EeEntry } from "./types";
 
 function escapeValue(value: string | number | null | undefined) {
   const safe = value === null || value === undefined ? "" : String(value);
@@ -26,6 +26,28 @@ export function exportCasEntriesCsv(entries: CasEntry[]) {
     entry.dateStart,
     entry.dateEnd ?? "",
     entry.hours,
+    entry.reflectionText,
+    entry.evidenceUri ?? "",
+  ]);
+  return toCsv(headers, rows);
+}
+
+export function exportTokEntriesCsv(entries: TokEntry[]) {
+  const headers = ["Date", "Title", "Reflection", "Evidence"];
+  const rows = entries.map((entry) => [
+    entry.date,
+    entry.title,
+    entry.reflectionText,
+    entry.evidenceUri ?? "",
+  ]);
+  return toCsv(headers, rows);
+}
+
+export function exportEeEntriesCsv(entries: EeEntry[]) {
+  const headers = ["Date", "Title", "Reflection", "Evidence"];
+  const rows = entries.map((entry) => [
+    entry.date,
+    entry.title,
     entry.reflectionText,
     entry.evidenceUri ?? "",
   ]);

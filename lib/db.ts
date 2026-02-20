@@ -1,7 +1,7 @@
 import initSqlJs from "sql.js";
 import type { Database, SqlJsStatic } from "sql.js";
 import { encryptDatabase, decryptDatabase } from "./crypto";
-import type { CasEntry, PlannerSettings, Subject, Task } from "./types";
+import type { CasEntry, PlannerSettings, Subject, Task, TokEntry, EeEntry } from "./types";
 
 const DB_KEY = "ibplanner-db";
 const SALT_KEY = "ibplanner-salt";
@@ -170,6 +170,26 @@ export function runMigrations(db: Database) {
     CREATE INDEX IF NOT EXISTS tasks_status_idx ON tasks(status);
     CREATE INDEX IF NOT EXISTS tasks_subject_idx ON tasks(subjectId);
     CREATE INDEX IF NOT EXISTS cas_date_idx ON cas_entries(dateStart);
+    CREATE TABLE IF NOT EXISTS tok_entries (
+      id TEXT PRIMARY KEY,
+      date TEXT NOT NULL,
+      title TEXT NOT NULL,
+      reflectionText TEXT NOT NULL,
+      evidenceUri TEXT,
+      createdAt TEXT,
+      updatedAt TEXT
+    );
+    CREATE TABLE IF NOT EXISTS ee_entries (
+      id TEXT PRIMARY KEY,
+      date TEXT NOT NULL,
+      title TEXT NOT NULL,
+      reflectionText TEXT NOT NULL,
+      evidenceUri TEXT,
+      createdAt TEXT,
+      updatedAt TEXT
+    );
+    CREATE INDEX IF NOT EXISTS tok_date_idx ON tok_entries(date);
+    CREATE INDEX IF NOT EXISTS ee_date_idx ON ee_entries(date);
   `);
 
   const version = getSetting(db, "schema_version");
@@ -236,6 +256,14 @@ export function fetchCasEntries(db: Database): CasEntry[] {
       hours: Number(entry.hours ?? 0),
     })
   );
+}
+
+export function fetchTokEntries(db: Database): TokEntry[] {
+  return all<TokEntry>(db, "SELECT * FROM tok_entries ORDER BY date DESC");
+}
+
+export function fetchEeEntries(db: Database): EeEntry[] {
+  return all<EeEntry>(db, "SELECT * FROM ee_entries ORDER BY date DESC");
 }
 
 export function fetchPlannerSettings(db: Database): PlannerSettings | null {
@@ -409,4 +437,94 @@ export function updateCasEntry(db: Database, entry: CasEntry) {
 
 export function deleteCasEntry(db: Database, entryId: string) {
   run(db, "DELETE FROM cas_entries WHERE id = ?", [entryId]);
+}
+
+export function createTokEntry(db: Database, entry: TokEntry) {
+  run(
+    db,
+    `INSERT INTO tok_entries (
+      id, date, title, reflectionText, evidenceUri,
+      createdAt, updatedAt
+     ) VALUES (?, ?, ?, ?, ?, ?, ?)`
+      .replace(/\s+/g, " ")
+      .trim(),
+    [
+      entry.id,
+      entry.date,
+      entry.title,
+      entry.reflectionText,
+      entry.evidenceUri ?? null,
+      entry.createdAt,
+      entry.updatedAt,
+    ]
+  );
+}
+
+export function updateTokEntry(db: Database, entry: TokEntry) {
+  run(
+    db,
+    `UPDATE tok_entries
+     SET date = ?, title = ?, reflectionText = ?,
+         evidenceUri = ?, updatedAt = ?
+     WHERE id = ?`
+      .replace(/\s+/g, " ")
+      .trim(),
+    [
+      entry.date,
+      entry.title,
+      entry.reflectionText,
+      entry.evidenceUri ?? null,
+      entry.updatedAt,
+      entry.id,
+    ]
+  );
+}
+
+export function deleteTokEntry(db: Database, entryId: string) {
+  run(db, "DELETE FROM tok_entries WHERE id = ?", [entryId]);
+}
+
+export function createEeEntry(db: Database, entry: EeEntry) {
+  run(
+    db,
+    `INSERT INTO ee_entries (
+      id, date, title, reflectionText, evidenceUri,
+      createdAt, updatedAt
+     ) VALUES (?, ?, ?, ?, ?, ?, ?)`
+      .replace(/\s+/g, " ")
+      .trim(),
+    [
+      entry.id,
+      entry.date,
+      entry.title,
+      entry.reflectionText,
+      entry.evidenceUri ?? null,
+      entry.createdAt,
+      entry.updatedAt,
+    ]
+  );
+}
+
+export function updateEeEntry(db: Database, entry: EeEntry) {
+  run(
+    db,
+    `UPDATE ee_entries
+     SET date = ?, title = ?, reflectionText = ?,
+         evidenceUri = ?, updatedAt = ?
+     WHERE id = ?`
+      .replace(/\s+/g, " ")
+      .trim(),
+    [
+      entry.date,
+      entry.title,
+      entry.reflectionText,
+      entry.evidenceUri ?? null,
+      entry.updatedAt,
+      entry.id,
+    ]
+  );
+}
+
+export function deleteEeEntry(db: Database, entryId: string) {
+  run(db, "DELETE FROM ee_entries WHERE id = ?", [entryId]);
 }
