@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# IB Life Planner
 
-## Getting Started
+A local-first planner for IB students to track tasks, deadlines, weekly progress, and CAS entries. Built as a Next.js PWA with an in-browser SQLite database (sql.js) persisted to IndexedDB.
 
-First, run the development server:
+**Features**
+- Task manager with urgency labels, filters, and smart scoring
+- Weekly progress tracking and per-subject workload
+- CAS entry tracking with strand totals and CSV export
+- Calendar month view of deadlines
+- Study planner generator based on available hours
+- Offline-first persistence (SQLite WASM + IndexedDB)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Setup
+
+1. Install dependencies
+```
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Copy SQLite WASM asset
+```
+npm run copy-wasm
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Run dev server
+```
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open http://localhost:3000
 
-## Learn More
+## Data Model (SQLite)
 
-To learn more about Next.js, take a look at the following resources:
+Tables:
+- `subjects(id, name, color, difficulty, createdAt, updatedAt)`
+- `tasks(id, title, subjectId, type, deadlineDateTime, estimatedHours, priority, status, notes, createdAt, updatedAt, completedAt)`
+- `cas_entries(id, strand, dateStart, dateEnd, hours, reflectionText, evidenceUri, createdAt, updatedAt)`
+- `settings(key, value)` for planner settings and schema version
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Indexes:
+- `tasks(deadlineDateTime)`
+- `tasks(status)`
+- `tasks(subjectId)`
+- `cas_entries(dateStart)`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Smart Priority Algorithm
 
-## Deploy on Vercel
+Inputs:
+- Time until deadline in hours
+- User priority (1-5)
+- Estimated hours
+- Subject difficulty (1-5, default 3)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Steps:
+1. Clamp hours until deadline `t` to [0, 336]
+2. `urgency = 1 - (t / 336)`
+3. `priorityNorm = (priority - 1) / 4`
+4. `effortNorm = clamp(estimatedHours / 10, 0, 1)`
+5. `difficultyNorm = (difficulty - 1) / 4`
+6. `score = 0.45*urgency + 0.30*priorityNorm + 0.15*effortNorm + 0.10*difficultyNorm`
+7. If overdue, add +0.2 capped at 1.0
+8. If status is Done, score = -1 and excluded
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Urgency Labels
+
+- Overdue: deadline < now and status != Done
+- Due today: same local calendar day and status != Done
+- Due in 1-2 days: within next 48 hours and status != Done
+- Due this week: within next 7 days and status != Done
+- Normal: everything else
+
+## Notes
+
+If the app shows a database initialization error, confirm that `/public/sql-wasm.wasm` exists and re-run:
+```
+npm run copy-wasm
+```
