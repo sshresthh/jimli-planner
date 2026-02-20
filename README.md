@@ -3,6 +3,7 @@
 A local-first planner for IB students to track tasks, deadlines, weekly progress, and CAS entries. Built as a Next.js PWA with an in-browser SQLite database (sql.js) persisted to IndexedDB.
 
 **Features**
+
 - Task manager with urgency labels, filters, and smart scoring
 - Weekly progress tracking and per-subject workload
 - CAS entry tracking with strand totals and CSV export
@@ -13,31 +14,36 @@ A local-first planner for IB students to track tasks, deadlines, weekly progress
 ## Setup
 
 1. Install dependencies
+
 ```
-npm install
+bun install
 ```
 
-2. Copy SQLite WASM asset
+1. Copy SQLite WASM asset
+
 ```
-npm run copy-wasm
+bun run copy-wasm
 ```
 
-3. Run dev server
+1. Run dev server
+
 ```
-npm run dev
+bun run dev
 ```
 
-Open http://localhost:3000
+Open <http://localhost:3000>
 
 ## Data Model (SQLite)
 
 Tables:
+
 - `subjects(id, name, color, difficulty, createdAt, updatedAt)`
 - `tasks(id, title, subjectId, type, deadlineDateTime, estimatedHours, priority, status, notes, createdAt, updatedAt, completedAt)`
 - `cas_entries(id, strand, dateStart, dateEnd, hours, reflectionText, evidenceUri, createdAt, updatedAt)`
 - `settings(key, value)` for planner settings and schema version
 
 Indexes:
+
 - `tasks(deadlineDateTime)`
 - `tasks(status)`
 - `tasks(subjectId)`
@@ -46,12 +52,14 @@ Indexes:
 ## Smart Priority Algorithm
 
 Inputs:
+
 - Time until deadline in hours
 - User priority (1-5)
 - Estimated hours
 - Subject difficulty (1-5, default 3)
 
 Steps:
+
 1. Clamp hours until deadline `t` to [0, 336]
 2. `urgency = 1 - (t / 336)`
 3. `priorityNorm = (priority - 1) / 4`
@@ -72,6 +80,7 @@ Steps:
 ## Notes
 
 If the app shows a database initialization error, confirm that `/public/sql-wasm.wasm` exists and re-run:
+
 ```
-npm run copy-wasm
+bun run copy-wasm
 ```
